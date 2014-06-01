@@ -18,3 +18,4 @@
 
 (custom-set-faces
  '(region ((t (:inherit nil :background "RoyalBlue4")))))
+

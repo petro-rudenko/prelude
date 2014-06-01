@@ -33,7 +33,7 @@
 ;;; Code:
 
 (require 'prelude-lisp)
-(prelude-require-packages '(clojure-mode clojure-test-mode cider))
+(prelude-require-packages '(clojure-mode clojure-test-mode cider typed-clojure-mode))
 
 (eval-after-load 'clojure-mode
   '(progn
@@ -45,7 +45,7 @@
      (setq prelude-clojure-mode-hook 'prelude-clojure-mode-defaults)
 
      (add-hook 'clojure-mode-hook (lambda ()
-                                    (run-hooks 'prelude-clojure-mode-hook)))))
+                                    (run-hooks 'prelude-clojure-mode-hook 'typed-clojure-mode)))))
 
 (eval-after-load 'cider
   '(progn
