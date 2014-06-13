@@ -34,20 +34,26 @@
 
 (require 'thingatpt)
 (require 'dash)
+(require 'ov)
 
 (defun prelude-open-with (arg)
   "Open visited file in default external program.
+When in dired mode, open file under the cursor.
 
 With a prefix ARG always prompt for command to use."
   (interactive "P")
-  (when buffer-file-name
-    (start-process "prelude-open-with-process"
-                   "*prelude-open-with-output*"
-                   (cond
-                    ((and (not arg) (eq system-type 'darwin)) "open")
-                    ((and (not arg) (member system-type '(gnu gnu/linux gnu/kfreebsd))) "xdg-open")
-                    (t (read-shell-command "Open current file with: ")))
-                   (shell-quote-argument buffer-file-name))))
+  (let ((current-file-name
+         (if (eq major-mode 'dired-mode)
+             (dired-get-file-for-visit)
+           buffer-file-name)))
+    (when current-file-name
+        (start-process "prelude-open-with-process"
+                       "*prelude-open-with-output*"
+                       (cond
+                        ((and (not arg) (eq system-type 'darwin)) "open")
+                        ((and (not arg) (member system-type '(gnu gnu/linux gnu/kfreebsd))) "xdg-open")
+                        (t (read-shell-command "Open current file with: ")))
+                       (shell-quote-argument current-file-name)))))
 
 (defun prelude-buffer-mode (buffer-or-name)
   "Retrieve the `major-mode' of BUFFER-OR-NAME."
@@ -157,7 +163,7 @@ point reaches the beginning or end of the buffer, stop there."
   (interactive)
   (indent-region (point-min) (point-max)))
 
-(defun prelude-indent-region-or-buffer ()
+(defun prelude-indent-buffer-or-region ()
   "Indent a region if selected, otherwise the whole buffer."
   (interactive)
   (save-excursion
@@ -176,18 +182,18 @@ point reaches the beginning or end of the buffer, stop there."
     (mark-defun)
     (indent-region (region-beginning) (region-end))))
 
+(defun prelude-todo-ov-evaporate (_ov _after _beg _end &optional _length)
+  (let ((inhibit-modification-hooks t))
+    (if _after (ov-reset _ov))))
+
 (defun prelude-annotate-todo ()
   "Put fringe marker on TODO: lines in the curent buffer."
   (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-            (format "[[:space:]]*%s+[[:space:]]*TODO:" comment-start) nil t)
-      (let ((overlay (make-overlay (- (point) 5) (point))))
-        (overlay-put overlay
-                     'before-string
-                     (propertize (format "A")
-                                 'display '(left-fringe right-triangle)))))))
+  (ov-set (format "[[:space:]]*%s+[[:space:]]*TODO:" comment-start)
+          'before-string
+          (propertize (format "A")
+                      'display '(left-fringe right-triangle))
+          'modification-hooks '(prelude-todo-ov-evaporate)))
 
 (defun prelude-copy-file-name-to-clipboard ()
   "Copy the current buffer file name to the clipboard."
@@ -285,11 +291,38 @@ there's a region, all lines that region covers will be duplicated."
   (interactive)
   (untabify (point-min) (point-max)))
 
+(defun prelude-untabify-buffer-or-region ()
+  "Untabify a region if selected, otherwise the whole buffer."
+  (interactive)
+  (save-excursion
+    (if (region-active-p)
+        (progn
+          (untabify (region-beginning) (region-end))
+          (message "Untabify selected region."))
+      (progn
+        (prelude-untabify-buffer)
+        (message "Untabify buffer.")))))
+
 (defun prelude-cleanup-buffer ()
   "Perform a bunch of operations on the whitespace content of a buffer."
   (interactive)
-  (prelude-indent-buffer)
   (prelude-untabify-buffer)
+  (prelude-indent-buffer)
+  (whitespace-cleanup))
+
+(defun prelude-cleanup-buffer-or-region ()
+  "Cleanup a region if selected, otherwise the whole buffer."
+  (interactive)
+  (save-excursion
+    (if (region-active-p)
+        (progn
+          (untabify (region-beginning) (region-end))
+          (indent-region (region-beginning) (region-end))
+          (message "Cleanup selected region."))
+      (progn
+        (prelude-untabify-buffer)
+        (prelude-indent-buffer)
+        (message "Cleanup buffer."))))
   (whitespace-cleanup))
 
 (defun prelude-eval-and-replace ()
@@ -397,9 +430,6 @@ Doesn't mess with special buffers."
     "Press <C-c p g> or <s-g> to run grep on a project."
     "Press <C-c p s> or <s-p> to switch between projects."
     "Press <C-=> or <s-x> to expand the selected region."
-    "Press <jj> quickly to jump to the beginning of a visible word."
-    "Press <jk> quickly to jump to a visible character."
-    "Press <jl> quickly to jump to a visible line."
     "Press <C-c g> to search in Google."
     "Press <C-c G> to search in GitHub."
     "Press <C-c y> to search in YouTube."
@@ -472,67 +502,6 @@ With a prefix ARG updates all installed packages."
                             (epl-installed-packages))))
     (message "Update finished. Restart Emacs to complete the process.")))
 
-(defun thing-at-point-goto-end-of-integer ()
-  "Go to end of integer at point."
-  (let ((inhibit-changing-match-data t))
-    ;; Skip over optional sign
-    (when (looking-at "[+-]")
-      (forward-char 1))
-    ;; Skip over digits
-    (skip-chars-forward "[[:digit:]]")
-    ;; Check for at least one digit
-    (unless (looking-back "[[:digit:]]")
-      (error "No integer here"))))
-(put 'integer 'beginning-op 'thing-at-point-goto-end-of-integer)
-
-(defun thing-at-point-goto-beginning-of-integer ()
-  "Go to end of integer at point."
-  (let ((inhibit-changing-match-data t))
-    ;; Skip backward over digits
-    (skip-chars-backward "[[:digit:]]")
-    ;; Check for digits and optional sign
-    (unless (looking-at "[+-]?[[:digit:]]")
-      (error "No integer here"))
-    ;; Skip backward over optional sign
-    (when (looking-back "[+-]")
-      (backward-char 1))))
-(put 'integer 'beginning-op 'thing-at-point-goto-beginning-of-integer)
-
-(defun thing-at-point-bounds-of-integer-at-point ()
-  "Get boundaries of integer at point."
-  (save-excursion
-    (let (beg end)
-      (thing-at-point-goto-beginning-of-integer)
-      (setq beg (point))
-      (thing-at-point-goto-end-of-integer)
-      (setq end (point))
-      (cons beg end))))
-(put 'integer 'bounds-of-thing-at-point 'thing-at-point-bounds-of-integer-at-point)
-
-(defun thing-at-point-integer-at-point ()
-  "Get integer at point."
-  (let ((bounds (bounds-of-thing-at-point 'integer)))
-    (string-to-number (buffer-substring (car bounds) (cdr bounds)))))
-(put 'integer 'thing-at-point 'thing-at-point-integer-at-point)
-
-(defun prelude-increment-integer-at-point (&optional inc)
-  "Increment integer at point by one.
-
-With numeric prefix arg INC, increment the integer by INC amount."
-  (interactive "p")
-  (let ((inc (or inc 1))
-        (n (thing-at-point 'integer))
-        (bounds (bounds-of-thing-at-point 'integer)))
-    (delete-region (car bounds) (cdr bounds))
-    (insert (int-to-string (+ n inc)))))
-
-(defun prelude-decrement-integer-at-point (&optional dec)
-  "Decrement integer at point by one.
-
-With numeric prefix arg DEC, decrement the integer by DEC amount."
-  (interactive "p")
-  (prelude-increment-integer-at-point (- (or dec 1))))
-
 ;;; Emacs in OSX already has fullscreen support
 ;;; Emacs has a similar built-in command in 24.4
 (defun prelude-fullscreen ()
@@ -545,10 +514,12 @@ This follows freedesktop standards, should work in X servers."
                              '(2 "_NET_WM_STATE_FULLSCREEN" 0))
     (error "Only X server is supported")))
 
-(defun prelude-find-user-init-file ()
-  "Edit the `user-init-file', in another window."
-  (interactive)
-  (find-file-other-window user-init-file))
+(defun prelude-find-user-init-file (&optional arg)
+  "Edit the `prelude-user-init-file', in another window.
+With a prefix argument ARG, find the `user-init-file' instead."
+  (interactive "P")
+  (if arg (find-file-other-window user-init-file)
+    (find-file-other-window prelude-user-init-file)))
 
 (defun prelude-find-shell-init-file ()
   "Edit the shell init file in another window."

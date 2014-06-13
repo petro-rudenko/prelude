@@ -19,5 +19,7 @@ savefile/
 projectile-bookmarks.eld
 session*
 .cask
+tramp
+/var/pcache
 ido.last
 ac-comphist.dat
