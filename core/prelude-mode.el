@@ -50,7 +50,6 @@
     (define-key map [(meta shift down)]  'move-text-down)
     (define-key map (kbd "C-c n") 'prelude-cleanup-buffer-or-region)
     (define-key map (kbd "C-c f")  'prelude-recentf-ido-find-file)
-    (define-key map (kbd "C-M-\\") 'prelude-indent-buffer-or-region)
     (define-key map (kbd "C-M-z") 'prelude-indent-defun)
     (define-key map (kbd "C-c u") 'prelude-view-url)
     (define-key map (kbd "C-c e") 'prelude-eval-and-replace)
@@ -64,12 +63,11 @@
     (define-key map (kbd "C-c TAB") 'prelude-indent-rigidly-and-copy-to-clipboard)
     (define-key map (kbd "C-c I") 'prelude-find-user-init-file)
     (define-key map (kbd "C-c S") 'prelude-find-shell-init-file)
+    (define-key map (kbd "C-c i") 'prelude-goto-symbol)
+    ;; extra prefix for projectile
+    (define-key map (kbd "s-p") 'projectile-command-map)
     ;; make some use of the Super key
-    (define-key map [?\s-d] 'projectile-find-dir)
-    (define-key map [?\s-p] 'projectile-switch-project)
-    (define-key map [?\s-f] 'projectile-find-file)
-    (define-key map [?\s-g] 'projectile-grep)
-
+    (define-key map (kbd "s-g") 'god-local-mode)
     (define-key map (kbd "s-r") 'prelude-recentf-ido-find-file)
     (define-key map (kbd "s-j") 'prelude-top-join-line)
     (define-key map (kbd "s-k") 'prelude-kill-whole-line)
@@ -93,7 +91,6 @@
                          ["Copy file name to clipboard" prelude-copy-file-name-to-clipboard])
 
                         ("Buffers"
-                         ["Clean up buffer" prelude-cleanup-buffer]
                          ["Clean up buffer or region" prelude-cleanup-buffer-or-region]
                          ["Kill other buffers" prelude-kill-other-buffers])
 
@@ -101,10 +98,6 @@
                          ["Insert empty line" prelude-insert-empty-line]
                          ["Move line up" prelude-move-line-up]
                          ["Move line down" prelude-move-line-down]
-                         ["Indent buffer" prelude-indent-buffer]
-                         ["Indent buffer or region" prelude-indent-buffer-or-region]
-                         ["Untabify buffer" prelude-untabify-buffer]
-                         ["Untabify buffer or region" prelude-untabify-buffer-or-region]
                          ["Duplicate line or region" prelude-duplicate-current-line-or-region]
                          ["Indent rigidly and copy to clipboard" prelude-indent-rigidly-and-copy-to-clipboard]
                          ["Insert date" prelude-insert-date]
