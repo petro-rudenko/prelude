@@ -13,7 +13,7 @@ Emacs power users.
 
 Prelude is compatible **ONLY with GNU Emacs 24.x**. In general you're
 advised to always run Prelude with the latest Emacs - currently
-**24.3**.
+**24.4**.
 
 **Table of Contents**
 
@@ -51,7 +51,7 @@ advised to always run Prelude with the latest Emacs - currently
 	- [Problems with flyspell-mode](#problems-with-flyspell-mode)
 	- [Ugly colors in the terminal Emacs version](#ugly-colors-in-the-terminal-emacs-version)
 	- [MELPA error on initial startup](#melpa-error-on-initial-startup)
-	- [No arrow navigation in editor buffers](#no-arrow-navigation-in-editor-buffers)
+	- [Warnings on arrow navigation in editor buffers](#warnings-on-navigation-in-editor-buffers)
 	- [Customized C-a behavior](#customized-c-a-behavior)
 	- [Poor ido matching performance on large datasets](#poor-ido-matching-performance-on-large-datasets)
 	- [Windows compatibility](#windows-compatibility)
@@ -233,6 +233,14 @@ alias vi='emacsclient -t'
 
 The last two aliases are helpful if you're used to editing files from
 the command line using `vi(m)`.
+
+Also you can open a file with cursor on choosen line:
+
+```bash
+emacsclient somefile:1234
+```
+
+This will open file 'somefile' and set cursor on line 1234.
 
 ## Getting to know Prelude
 
