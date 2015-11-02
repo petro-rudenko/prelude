@@ -87,7 +87,7 @@
 (setq sp-hybrid-kill-entire-symbol nil)
 (sp-use-paredit-bindings)
 
-(show-smartparens-global-mode +1)
+(show-smartparens-global-mode -1)
 
 (define-key prog-mode-map (kbd "M-(") (prelude-wrap-with "("))
 ;; FIXME: pick terminal friendly binding
