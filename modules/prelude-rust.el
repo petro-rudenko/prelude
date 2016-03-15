@@ -1,8 +1,8 @@
 (require 'prelude-programming)
 (prelude-require-packages '(rust-mode racer))
 
-(setq racer-cmd "/home/peter/.cargo/bin/racer")
-(setq racer-rust-src-path "/home/peter/soft/rust/rust/src/")
+(setq racer-cmd "~/.cargo/bin/racer")
+(setq racer-rust-src-path "~/soft/rust/rust/src/")
 
 (add-hook 'rust-mode-hook #'racer-mode)
 (add-hook 'racer-mode-hook #'eldoc-mode)
